@@ -14,29 +14,6 @@ def timeit(x, func, iter=10):
 	runtime = (time.time()-start)/iter
 	return runtime
 
-
-class Reorg(nn.Module):
-    def __init__(self, stride=2):
-        super(Reorg, self).__init__()
-        self.stride = stride
-    def forward(self, x):
-        stride = self.stride
-        assert(x.data.dim() == 4)
-        B = x.data.size(0)
-        C = x.data.size(1)
-        H = x.data.size(2)
-        W = x.data.size(3)
-        assert(H % stride == 0)
-        assert(W % stride == 0)
-        ws = stride
-        hs = stride
-        x = x.view(B, C, H/hs, hs, W/ws, ws).transpose(3,4).contiguous()
-        x = x.view(B, C, H/hs*W/ws, hs*ws).transpose(2,3).contiguous()
-        x = x.view(B, C, hs*ws, H/hs, W/ws).transpose(1,2).contiguous()
-        x = x.view(B, hs*ws*C, H/hs, W/ws)
-        return x
-
-
 class HOGLayer(nn.Module):
     def __init__(self, nbins=10, pool=8, stride=1, padding=1, dilation=1):
         super(HOGLayer, self).__init__()
@@ -100,24 +77,3 @@ if __name__ == '__main__':
         cv2.imshow('bin', im)
         cv2.waitKey()
         bin = (bin + 1) % hog.nbins
-
-    # rt = timeit(x, hog)
-    # print(y.shape, 'time: ', rt)
-
-
-    # Test of RegorgLayer
-    # x = torch.rand(n, c, h, w)
-    # if cuda:
-    #     x = x.cuda()
-    #
-    # net = nn.Sequential(Reorg(1), nn.Conv2d(c, 64, 3, 1, 1)).cuda()
-    # y = net(x)
-    #
-    # for stride in [1, 2, 4, 8]:
-    #     cin = c * stride**2
-    #     module = nn.Sequential(Reorg(stride), nn.Conv2d(cin, 64, 3, 1, 1))
-    #     if cuda:
-    #         module.cuda()
-    #
-    #     print("stride# ", stride, " time: ", timeit(x, module))
-
